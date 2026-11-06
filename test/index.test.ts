@@ -1,6 +1,6 @@
 import { expect, test, vi } from 'vitest'
 
-test('anuncia a inicialização da aplicação', async () => {
+test('Deve anunciar a inicialização da aplicação', async () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     try {
         await import('../src/index.js')
