@@ -2,14 +2,14 @@ import { ObjetoValor } from '@/modules/shared/objeto-valor'
 import ErroValidacao from '@/modules/error/erro-validacao'
 import Erros from '@/modules/error/constants-erros'
 
-export class HashSenha extends ObjetoValor<HashSenha, string> {
+export class SenhaHash extends ObjetoValor<SenhaHash, string> {
     private constructor(valor: string) {
         super(valor)
     }
 
-    public static criar(hash: string): HashSenha {
+    public static criar(hash: string): SenhaHash {
         this.validar(hash)
-        return new HashSenha(hash)
+        return new SenhaHash(hash)
     }
 
     private static validar(hash: string): void {
