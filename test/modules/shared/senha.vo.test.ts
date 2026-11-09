@@ -35,4 +35,14 @@ describe('Senha', () => {
             expect(() => Senha.criar(senha)).toThrowError(Erros.SENHA_CONTEM_ESPACOS)
         }
     })
+
+    test('Deve aceitar senha com até 72 bytes em UTF-8', () => {
+        const senha = '😀'.repeat(18)
+        expect(Senha.criar(senha).valor).toBe(senha)
+    })
+
+    test('Deve rejeitar senha com mais de 72 bytes em UTF-8', () => {
+        expect(() => Senha.criar('😀'.repeat(19)))
+            .toThrowError(Erros.SENHA_EXCEDE_LIMITE_BCRYPT)
+    })
 })

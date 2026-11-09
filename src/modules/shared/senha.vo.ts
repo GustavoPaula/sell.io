@@ -19,5 +19,8 @@ export class Senha extends ObjetoValor<Senha, string> {
         if (tamanho < 6) ErroValidacao.lancar(Erros.SENHA_PEQUENA)
         if (tamanho > 50) ErroValidacao.lancar(Erros.SENHA_GRANDE)
         if (senha.includes(' ')) ErroValidacao.lancar(Erros.SENHA_CONTEM_ESPACOS)
+        if (Buffer.byteLength(senha, 'utf8') > 72) {
+            ErroValidacao.lancar(Erros.SENHA_EXCEDE_LIMITE_BCRYPT)
+        }
     }
 }
