@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { validate } from 'uuid'
 import { Id } from '@/modules/shared/id.vo'
-import ErroValidacao from '@/modules/error/erro-validacao'
 import Erros from '@/modules/error/constants-erros'
 
 describe('Id', () => {
@@ -28,16 +27,9 @@ describe('Id', () => {
         expect(id.paraString()).toBe(valor)
     })
 
-    test.each(['inválido', '', '   '])(
-        'Deve rejeitar o identificador inválido %j',
-        (valorInvalido) => {
-            try {
-                Id.criar(valorInvalido)
-                expect.fail('Deveria rejeitar o identificador')
-            } catch (erro) {
-                expect(erro).toBeInstanceOf(ErroValidacao)
-                expect(erro).toMatchObject({ codigo: Erros.ID_INVALIDO })
-            }
-        }
-    )
+    test('Deve rejeitar um identificador inválido ou vazio', () => {
+        expect(() => Id.criar('inválido')).toThrowError(Erros.ID_INVALIDO)
+        expect(() => Id.criar('')).toThrowError(Erros.ID_INVALIDO)
+        expect(() => Id.criar('   ')).toThrowError(Erros.ID_INVALIDO)
+    })
 })
