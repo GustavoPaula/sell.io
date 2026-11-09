@@ -6,11 +6,11 @@ export interface EntidadeProps<ID = string | number> {
 
 export default abstract class Entidade<Tipo, Props extends EntidadeProps> {
     readonly id: Id
-    readonly props: Props
+    readonly #props: Readonly<Props>
 
     constructor(props: Props) {
         this.id = Id.criar(props.id as string)
-        this.props = { ...props, id: this.id.valor }
+        this.#props = Object.freeze({ ...props, id: this.id.valor })
     }
 
     igual(entidade: Entidade<Tipo, Props>): boolean {
@@ -21,10 +21,10 @@ export default abstract class Entidade<Tipo, Props extends EntidadeProps> {
         return this.id.diferente(entidade.id)
     }
 
-    clone(novasProps: Props, ...args: any[]): Tipo {
+    clone(novasProps: Partial<Props>, ...args: any[]): Tipo {
         return new (this.constructor as any)(
             {
-                ...this.props,
+                ...this.#props,
                 ...novasProps
             },
             ...args
