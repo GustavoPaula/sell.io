@@ -3,6 +3,8 @@ import UsuarioRepositorio from '@/modules/usuarios/provider/usuario.repositorio'
 import CryptoRepositorio from '@/modules/usuarios/provider/crypto.repositorio'
 import { Senha } from '@/modules/shared/senha.vo'
 import { Usuario } from '@/modules/usuarios/model/usuario.entidade'
+import ErroValidacao from '@/modules/error/erro-validacao'
+import Erros from '@/modules/error/constants-erros'
 
 export type DadosEntrada = {
     nomeCompleto: string
@@ -25,11 +27,11 @@ export default class AdicionarUsuarioCasoDeUso implements CasoDeUso<
 
         const usuarioExistente = await this.repo.buscarPorEmail(usuario.email)
         if (usuarioExistente) {
-            throw new Error('Usuário já existe com esse e-mail cadastrado')
+            ErroValidacao.lancar(Erros.EMAIL_JA_CADASTRADO)
         }
 
         const senhaHash = await this.crypto.criptografar(senhaValida)
-        const novoUsuario = new Usuario({
+        const novoUsuario = Usuario.criar({
             nomeCompleto: usuario.nomeCompleto,
             email: usuario.email,
             senha: senhaHash,

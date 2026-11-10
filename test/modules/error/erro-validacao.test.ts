@@ -10,19 +10,16 @@ describe('ErroValidacao', () => {
         expect(erro.message).toBe(Erros.DESCONHECIDO)
         expect(erro.valor).toBeUndefined()
         expect(erro.extras).toEqual({})
+        expect(erro.erros).toEqual([{ codigo: Erros.DESCONHECIDO }])
     })
 
     test('Deve preservar o código, valor e extras informados', () => {
         const extras = { campo: 'id' }
-        const erro = ErroValidacao.novo(Erros.ID_INVALIDO, 'inválido', extras)
+        const erro = new ErroValidacao({ codigo: Erros.ID_INVALIDO, valor: 'inválido', extras })
         expect(erro.codigo).toBe(Erros.ID_INVALIDO)
         expect(erro.message).toBe(Erros.ID_INVALIDO)
         expect(erro.valor).toBe('inválido')
         expect(erro.extras).toBe(extras)
-    })
-
-    test('Deve aceitar argumentos omitidos', () => {
-        expect(ErroValidacao.novo().codigo).toBe(Erros.DESCONHECIDO)
     })
 
     test('Deve propagar um erro com os dados informados', () => {

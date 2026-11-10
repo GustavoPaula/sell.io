@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import Erros from '@/modules/error/constants-erros'
+import ErroValidacao from '@/modules/error/erro-validacao'
 import AdicionarUsuarioCasoDeUso, {
     type DadosEntrada
 } from '@/modules/usuarios/usecase/adicionar-usuario.caso.de.uso'
@@ -46,12 +47,15 @@ describe('AdicionarUsuarioCasoDeUso', () => {
     test('Deve rejeitar um e-mail já cadastrado sem gerar hash ou salvar', async () => {
         const { repo, crypto, caso } = preparar()
         repo.buscarPorEmail.mockResolvedValue(
-            new Usuario({ ...dados, senha: hash })
+            Usuario.criar({ ...dados, senha: hash })
         )
 
-        await expect(caso.executar(dados)).rejects.toThrow(
-            'Usuário já existe com esse e-mail cadastrado'
-        )
+        const resultado = caso.executar(dados)
+        await expect(resultado).rejects.toBeInstanceOf(ErroValidacao)
+        await expect(resultado).rejects.toMatchObject({
+            codigo: Erros.EMAIL_JA_CADASTRADO,
+            erros: [{ codigo: Erros.EMAIL_JA_CADASTRADO }]
+        })
         expect(crypto.criptografar).not.toHaveBeenCalled()
         expect(repo.salvar).not.toHaveBeenCalled()
     })
@@ -98,9 +102,9 @@ describe('AdicionarUsuarioCasoDeUso', () => {
     test('Deve rejeitar hash inválido retornado pelo provedor sem salvar', async () => {
         const { repo, crypto, caso } = preparar()
         crypto.criptografar.mockResolvedValue('hash inválido')
-        await expect(caso.executar(dados)).rejects.toThrow(
-            Erros.SENHA_HASH_INVALIDA
-        )
+        await expect(caso.executar(dados)).rejects.toMatchObject({
+            erros: [{ campo: 'senha', codigo: Erros.SENHA_HASH_INVALIDA }]
+        })
         expect(repo.salvar).not.toHaveBeenCalled()
     })
 })

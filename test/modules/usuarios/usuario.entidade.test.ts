@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import Erros from '@/modules/error/constants-erros'
+import ErroValidacao from '@/modules/error/erro-validacao'
 import { Usuario, type UsuarioProps } from '@/modules/usuarios/model/usuario.entidade'
 
 describe('Usuario', () => {
@@ -12,7 +13,7 @@ describe('Usuario', () => {
     }
 
     test('Deve criar um usuário com os valores validados e acesso aos objetos de valor', () => {
-        const usuario = new Usuario(dados)
+        const usuario = Usuario.criar(dados)
 
         expect(usuario.$nomeCompleto.valor).toBe(dados.nomeCompleto)
         expect(usuario.$email.valor).toBe(dados.email)
@@ -20,25 +21,35 @@ describe('Usuario', () => {
         expect(usuario.$permissao.valor).toBe(dados.permissao)
     })
 
-    test('Deve rejeitar valores inválidos para os dados obrigatórios', () => {
-        expect(() => new Usuario({ ...dados, nomeCompleto: '' })).toThrowError(Erros.NOME_VAZIO)
-        expect(() => new Usuario({ ...dados, email: '' })).toThrowError(Erros.EMAIL_VAZIO)
-        expect(() => new Usuario({ ...dados, permissao: '' })).toThrowError(Erros.PERMISSAO_USUARIO_VAZIA)
+    test('Deve reunir os erros de todos os atributos inválidos', () => {
+        try {
+            Usuario.criar({ nomeCompleto: '', email: '', senha: 'inválido', permissao: '' })
+            expect.fail('Era esperado um erro de validação')
+        } catch (erro: unknown) {
+            expect(erro).toBeInstanceOf(ErroValidacao)
+            if (!(erro instanceof ErroValidacao)) throw erro
+            expect(erro.erros).toEqual([
+                { campo: 'nomeCompleto', codigo: Erros.NOME_VAZIO },
+                { campo: 'email', codigo: Erros.EMAIL_VAZIO },
+                { campo: 'senha', codigo: Erros.SENHA_HASH_INVALIDA },
+                { campo: 'permissao', codigo: Erros.PERMISSAO_USUARIO_VAZIA }
+            ])
+        }
     })
 
-    test('Deve rejeitar senha informada que não seja um hash bcrypt válido', () => {
-        expect(() => new Usuario({ ...dados, senha: '' })).toThrowError(Erros.SENHA_HASH_INVALIDA)
-        expect(() => new Usuario({ ...dados, senha: 'senha em texto puro' })).toThrowError(Erros.SENHA_HASH_INVALIDA)
+    test('Deve rejeitar uma alteração inválida ao clonar', () => {
+        const usuario = Usuario.criar(dados)
+        expect(() => usuario.clone({ email: '' })).toThrow(ErroValidacao)
     })
 
     test('Deve permitir usuário sem senha', () => {
-        const usuario = new Usuario({ ...dados, senha: undefined })
+        const usuario = Usuario.criar({ ...dados, senha: undefined })
         expect(usuario.senha).toBeUndefined()
         expect(usuario.$senha).toBeUndefined()
     })
 
     test('Deve clonar com alterações parciais preservando a identidade e os demais valores', () => {
-        const usuario = new Usuario(dados)
+        const usuario = Usuario.criar(dados)
         const clone = usuario.clone({ email: 'nova@example.com' })
         expect(clone.id.valor).toBe(usuario.id.valor)
         expect(clone.email).toBe('nova@example.com')
@@ -47,7 +58,7 @@ describe('Usuario', () => {
     })
 
     test('Deve remover o hash da cópia sem alterar o usuário original', () => {
-        const usuario = new Usuario(dados)
+        const usuario = Usuario.criar(dados)
         const copia = usuario.semSenha()
         expect(copia.id.valor).toBe(usuario.id.valor)
         expect(copia.senha).toBeUndefined()
@@ -56,7 +67,7 @@ describe('Usuario', () => {
     })
 
     test('Deve retornar os dados públicos com ID em texto ao chamar paraJSON', () => {
-        const usuario = new Usuario(dados)
+        const usuario = Usuario.criar(dados)
         expect(usuario.paraJSON()).toEqual({
             id: usuario.id.valor,
             nomeCompleto: dados.nomeCompleto,
@@ -66,7 +77,7 @@ describe('Usuario', () => {
     })
 
     test('Deve omitir o hash e as propriedades internas na serialização e no espalhamento', () => {
-        const usuario = new Usuario(dados)
+        const usuario = Usuario.criar(dados)
         expect(JSON.parse(JSON.stringify(usuario))).toEqual({
             id: { valor: usuario.id.valor },
             nomeCompleto: dados.nomeCompleto,
