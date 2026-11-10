@@ -1,6 +1,8 @@
 import { describe, expect, test, vi } from 'vitest'
 import Erros from '@/modules/error/constants-erros'
-import AdicionarUsuarioCasoDeUso, { type DadosEntrada } from '@/modules/usuarios/usecase/salvar-usuario.caso.de.uso'
+import AdicionarUsuarioCasoDeUso, {
+    type DadosEntrada
+} from '@/modules/usuarios/usecase/adicionar-usuario.caso.de.uso'
 import { Usuario } from '@/modules/usuarios/model/usuario.entidade'
 
 describe('AdicionarUsuarioCasoDeUso', () => {
@@ -9,7 +11,7 @@ describe('AdicionarUsuarioCasoDeUso', () => {
         nomeCompleto: 'Maria Silva',
         email: 'maria@example.com',
         senha: 'senha123',
-        permissao: 'membro'
+        permissao: 'MEMBRO'
     }
 
     function preparar() {
@@ -21,7 +23,11 @@ describe('AdicionarUsuarioCasoDeUso', () => {
             criptografar: vi.fn().mockResolvedValue(hash),
             comparar: vi.fn()
         }
-        return { repo, crypto, caso: new AdicionarUsuarioCasoDeUso(repo, crypto) }
+        return {
+            repo,
+            crypto,
+            caso: new AdicionarUsuarioCasoDeUso(repo, crypto)
+        }
     }
 
     test('Deve persistir um usuário com a senha convertida em hash', async () => {
@@ -39,16 +45,22 @@ describe('AdicionarUsuarioCasoDeUso', () => {
 
     test('Deve rejeitar um e-mail já cadastrado sem gerar hash ou salvar', async () => {
         const { repo, crypto, caso } = preparar()
-        repo.buscarPorEmail.mockResolvedValue(new Usuario({ ...dados, senha: hash }))
+        repo.buscarPorEmail.mockResolvedValue(
+            new Usuario({ ...dados, senha: hash })
+        )
 
-        await expect(caso.executar(dados)).rejects.toThrow('Usuário já existe com esse e-mail cadastrado')
+        await expect(caso.executar(dados)).rejects.toThrow(
+            'Usuário já existe com esse e-mail cadastrado'
+        )
         expect(crypto.criptografar).not.toHaveBeenCalled()
         expect(repo.salvar).not.toHaveBeenCalled()
     })
 
     test('Deve rejeitar senha inválida antes de consultar o repositório ou gerar hash', async () => {
         const { repo, crypto, caso } = preparar()
-        await expect(caso.executar({ ...dados, senha: '' })).rejects.toThrow(Erros.SENHA_VAZIA)
+        await expect(caso.executar({ ...dados, senha: '' })).rejects.toThrow(
+            Erros.SENHA_VAZIA
+        )
         expect(repo.buscarPorEmail).not.toHaveBeenCalled()
         expect(crypto.criptografar).not.toHaveBeenCalled()
         expect(repo.salvar).not.toHaveBeenCalled()
@@ -75,8 +87,9 @@ describe('AdicionarUsuarioCasoDeUso', () => {
 
     test('Deve rejeitar senha com mais de 72 bytes antes de gerar hash', async () => {
         const { repo, crypto, caso } = preparar()
-        await expect(caso.executar({ ...dados, senha: '😀'.repeat(19) }))
-            .rejects.toThrow(Erros.SENHA_EXCEDE_LIMITE_BCRYPT)
+        await expect(
+            caso.executar({ ...dados, senha: '😀'.repeat(19) })
+        ).rejects.toThrow(Erros.SENHA_EXCEDE_LIMITE_BCRYPT)
         expect(repo.buscarPorEmail).not.toHaveBeenCalled()
         expect(crypto.criptografar).not.toHaveBeenCalled()
         expect(repo.salvar).not.toHaveBeenCalled()
@@ -85,7 +98,9 @@ describe('AdicionarUsuarioCasoDeUso', () => {
     test('Deve rejeitar hash inválido retornado pelo provedor sem salvar', async () => {
         const { repo, crypto, caso } = preparar()
         crypto.criptografar.mockResolvedValue('hash inválido')
-        await expect(caso.executar(dados)).rejects.toThrow(Erros.SENHA_HASH_INVALIDA)
+        await expect(caso.executar(dados)).rejects.toThrow(
+            Erros.SENHA_HASH_INVALIDA
+        )
         expect(repo.salvar).not.toHaveBeenCalled()
     })
 })

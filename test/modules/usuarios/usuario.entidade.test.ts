@@ -8,7 +8,7 @@ describe('Usuario', () => {
         nomeCompleto: 'Maria Silva',
         email: 'maria@example.com',
         senha: hash,
-        permissao: 'membro'
+        permissao: 'MEMBRO'
     }
 
     test('Deve criar um usuário com os valores validados e acesso aos objetos de valor', () => {

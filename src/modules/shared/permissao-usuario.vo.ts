@@ -13,8 +13,9 @@ export class PermissaoUsuario extends ObjetoValor<PermissaoUsuario, string> {
     }
 
     private static validar(permissao: string): void {
-        if (!permissao.trim()) ErroValidacao.lancar(Erros.PERMISSAO_USUARIO_VAZIA)
-        if (permissao !== 'admin' && permissao !== 'membro') {
+        if (!permissao.trim())
+            ErroValidacao.lancar(Erros.PERMISSAO_USUARIO_VAZIA)
+        if (permissao !== 'ADMIN' && permissao !== 'MEMBRO') {
             ErroValidacao.lancar(Erros.PERMISSAO_USUARIO_INVALIDA)
         }
     }
