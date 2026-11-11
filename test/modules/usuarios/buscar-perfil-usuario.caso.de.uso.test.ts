@@ -11,7 +11,7 @@ describe('BuscarPerfilUsuarioCasoDeUso', () => {
     })
 
     function preparar() {
-        const repo = { buscarPorId: vi.fn().mockResolvedValue(usuario), buscarPorEmail: vi.fn(), salvar: vi.fn() }
+        const repo = { buscarPorId: vi.fn().mockResolvedValue(usuario), buscarPorEmail: vi.fn(), salvar: vi.fn(), alterarProps: vi.fn() }
         return { repo, caso: new BuscarPerfilUsuarioCasoDeUso(repo) }
     }
 
