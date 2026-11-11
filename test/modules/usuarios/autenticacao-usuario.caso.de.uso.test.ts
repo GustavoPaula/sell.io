@@ -12,7 +12,7 @@ describe('AutenticacaoUsuarioCasoDeUso', () => {
     })
 
     function preparar() {
-        const repo = { buscarPorEmail: vi.fn().mockResolvedValue(usuario), salvar: vi.fn() }
+        const repo = { buscarPorEmail: vi.fn().mockResolvedValue(usuario), buscarPorId: vi.fn(), salvar: vi.fn() }
         const crypto = { comparar: vi.fn().mockResolvedValue(true), criptografar: vi.fn() }
         return { repo, crypto, caso: new AutenticacaoUsuarioCasoDeUso(repo, crypto) }
     }

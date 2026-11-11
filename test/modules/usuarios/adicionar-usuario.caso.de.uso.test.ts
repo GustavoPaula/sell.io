@@ -18,6 +18,7 @@ describe('AdicionarUsuarioCasoDeUso', () => {
     function preparar() {
         const repo = {
             buscarPorEmail: vi.fn().mockResolvedValue(null),
+            buscarPorId: vi.fn(),
             salvar: vi.fn().mockResolvedValue(undefined)
         }
         const crypto = {
