@@ -20,7 +20,7 @@ describe('AdicionarUsuarioCasoDeUso', () => {
             buscarPorEmail: vi.fn().mockResolvedValue(null),
             buscarPorId: vi.fn(),
             salvar: vi.fn().mockResolvedValue(undefined),
-            alterarProps: vi.fn()
+            criarToken: vi.fn(), confirmarToken: vi.fn(), desativarUsuario: vi.fn(), alterarProps: vi.fn()
         }
         const crypto = {
             criptografar: vi.fn().mockResolvedValue(hash),
@@ -44,6 +44,15 @@ describe('AdicionarUsuarioCasoDeUso', () => {
         expect(usuario).toBeInstanceOf(Usuario)
         expect(usuario.email).toBe(dados.email)
         expect(usuario.senha).toBe(hash)
+    })
+
+    test('Deve cadastrar usuário ativo com e-mail não verificado', async () => {
+        const { repo, caso } = preparar()
+        await caso.executar(dados)
+        const usuario = repo.salvar.mock.calls[0]?.[0] as Usuario
+        expect(usuario.deletadoEm).toBeNull()
+        expect(usuario.emailVerificadoEm).toBeNull()
+        expect(usuario.administradorSistema).toBe(false)
     })
 
     test('Deve rejeitar um e-mail já cadastrado sem gerar hash ou salvar', async () => {

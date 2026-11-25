@@ -4,12 +4,16 @@ import { SenhaHash } from '@/modules/shared/senha-hash.vo'
 import { NomeCompleto } from '@/modules/shared/nome-completo.vo'
 import { PermissaoUsuario } from '@/modules/shared/permissao-usuario.vo'
 import ErroValidacao from '@/modules/error/erro-validacao'
+import Erros from '@/modules/error/constants-erros'
 
 export interface UsuarioProps extends EntidadeProps<string> {
     nomeCompleto: string
     email: string
     senha?: string | undefined
     permissao: string
+    deletadoEm?: Date | null
+    emailVerificadoEm?: Date | null
+    administradorSistema?: boolean
 }
 
 type UsuarioValidado = {
@@ -24,6 +28,9 @@ export class Usuario extends Entidade<Usuario, UsuarioProps> {
     public readonly email: string
     readonly #senha: string | undefined
     public readonly permissao: string
+    public readonly deletadoEm: Date | null
+    public readonly emailVerificadoEm: Date | null
+    public readonly administradorSistema: boolean
 
     private constructor(props: UsuarioProps, dados: UsuarioValidado) {
         super(props)
@@ -31,9 +38,15 @@ export class Usuario extends Entidade<Usuario, UsuarioProps> {
         this.email = dados.email.valor
         this.#senha = dados.senha?.valor
         this.permissao = dados.permissao.valor
+        this.deletadoEm = props.deletadoEm ?? null
+        this.emailVerificadoEm = props.emailVerificadoEm ?? null
+        this.administradorSistema = props.administradorSistema ?? false
     }
 
     static criar(props: UsuarioProps): Usuario {
+        if (props.administradorSistema && props.permissao !== 'ADMIN') {
+            ErroValidacao.lancar(Erros.ADMINISTRADOR_SISTEMA_PERMISSAO_INVALIDA)
+        }
         const dados = ErroValidacao.executar({
             nomeCompleto: () => NomeCompleto.criar(props.nomeCompleto),
             email: () => Email.criar(props.email),
@@ -50,6 +63,9 @@ export class Usuario extends Entidade<Usuario, UsuarioProps> {
             email: this.email,
             senha: this.#senha,
             permissao: this.permissao,
+            deletadoEm: this.deletadoEm,
+            emailVerificadoEm: this.emailVerificadoEm,
+            administradorSistema: this.administradorSistema,
             ...novasProps
         })
     }

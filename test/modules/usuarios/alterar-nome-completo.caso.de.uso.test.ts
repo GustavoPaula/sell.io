@@ -14,7 +14,7 @@ describe('AlterarNomeCompletoCasoDeUso', () => {
             buscarPorId: vi.fn().mockResolvedValue(usuario),
             buscarPorEmail: vi.fn(),
             salvar: vi.fn(),
-            alterarProps: vi.fn().mockResolvedValue(undefined)
+            criarToken: vi.fn(), confirmarToken: vi.fn(), desativarUsuario: vi.fn(), alterarProps: vi.fn().mockResolvedValue(undefined)
         }
         return { repo, caso: new AlterarNomeCompletoCasoDeUso(repo) }
     }

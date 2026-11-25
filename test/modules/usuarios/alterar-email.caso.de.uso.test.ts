@@ -5,7 +5,8 @@ import AlterarEmailCasoDeUso from '@/modules/usuarios/usecase/alterar-email.caso
 
 describe('AlterarEmailCasoDeUso', () => {
     const usuario = Usuario.criar({
-        nomeCompleto: 'Maria Silva', email: 'maria@example.com', permissao: 'MEMBRO'
+        nomeCompleto: 'Maria Silva', email: 'maria@example.com', permissao: 'MEMBRO',
+        emailVerificadoEm: new Date('2026-01-01')
     })
 
     function preparar() {
@@ -13,19 +14,24 @@ describe('AlterarEmailCasoDeUso', () => {
             buscarPorId: vi.fn().mockResolvedValue(usuario),
             buscarPorEmail: vi.fn().mockResolvedValue(null),
             salvar: vi.fn(),
-            alterarProps: vi.fn().mockResolvedValue(undefined)
+            alterarProps: vi.fn().mockResolvedValue(undefined),
+            desativarUsuario: vi.fn(),
+            criarToken: vi.fn(),
+            confirmarToken: vi.fn()
         }
         return { repo, caso: new AlterarEmailCasoDeUso(repo) }
     }
 
-    test('Deve alterar somente o e-mail do usuário logado', async () => {
+    test('Deve alterar o e-mail do usuário e limpar a verificação', async () => {
         const { repo, caso } = preparar()
         const resultado = await caso.executar({ novoEmail: 'novo@example.com' }, usuario.id.valor)
 
         expect(resultado).toBeUndefined()
         expect(repo.buscarPorId).toHaveBeenCalledExactlyOnceWith(usuario.id.valor)
         expect(repo.buscarPorEmail).toHaveBeenCalledExactlyOnceWith('novo@example.com')
-        expect(repo.alterarProps).toHaveBeenCalledExactlyOnceWith(usuario.id.valor, { email: 'novo@example.com' })
+        expect(repo.alterarProps).toHaveBeenCalledExactlyOnceWith(usuario.id.valor, {
+            email: 'novo@example.com', emailVerificadoEm: null
+        })
         expect(repo.salvar).not.toHaveBeenCalled()
         expect(usuario.email).toBe('maria@example.com')
     })
@@ -47,7 +53,19 @@ describe('AlterarEmailCasoDeUso', () => {
         repo.buscarPorEmail.mockResolvedValue(usuario)
 
         await expect(caso.executar({ novoEmail: usuario.email }, usuario.id.valor)).resolves.toBeUndefined()
-        expect(repo.alterarProps).toHaveBeenCalledExactlyOnceWith(usuario.id.valor, { email: usuario.email })
+        expect(repo.buscarPorEmail).not.toHaveBeenCalled()
+        expect(repo.alterarProps).not.toHaveBeenCalled()
+    })
+
+    test('Deve permitir o endereço quando a consulta retornar o próprio usuário', async () => {
+        const { repo, caso } = preparar()
+        repo.buscarPorEmail.mockResolvedValue(usuario)
+
+        await caso.executar({ novoEmail: 'novo@example.com' }, usuario.id.valor)
+
+        expect(repo.alterarProps).toHaveBeenCalledExactlyOnceWith(usuario.id.valor, {
+            email: 'novo@example.com', emailVerificadoEm: null
+        })
     })
 
     test('Deve propagar falha ao consultar o e-mail', async () => {

@@ -7,21 +7,38 @@ export type DadosEntrada = {
     novoEmail: string
 }
 
-export default class AlterarEmailCasoDeUso implements CasoDeUso<DadosEntrada, void> {
+export default class AlterarEmailCasoDeUso implements CasoDeUso<
+    DadosEntrada,
+    void
+> {
     constructor(private readonly repo: UsuarioRepositorio) {}
 
-    async executar(dados: DadosEntrada, idUsuarioLogado: string): Promise<void> {
+    async executar(
+        dados: DadosEntrada,
+        idUsuarioLogado: string
+    ): Promise<void> {
         const usuario = await this.repo.buscarPorId(idUsuarioLogado)
         if (!usuario) {
             return ErroValidacao.lancar(Erros.USUARIO_NAO_ENCONTRADO)
         }
 
         const atualizado = usuario.clone({ email: dados.novoEmail })
-        const usuarioExistente = await this.repo.buscarPorEmail(atualizado.email)
-        if (usuarioExistente && usuarioExistente.id.valor !== usuario.id.valor) {
+        if (atualizado.email === usuario.email) return
+
+        const usuarioExistente = await this.repo.buscarPorEmail(
+            atualizado.email
+        )
+
+        if (
+            usuarioExistente &&
+            usuarioExistente.id.valor !== usuario.id.valor
+        ) {
             return ErroValidacao.lancar(Erros.EMAIL_JA_CADASTRADO)
         }
 
-        await this.repo.alterarProps(usuario.id.valor, { email: atualizado.email })
+        await this.repo.alterarProps(usuario.id.valor, {
+            email: atualizado.email,
+            emailVerificadoEm: null
+        })
     }
 }

@@ -82,7 +82,10 @@ describe('Usuario', () => {
             id: { valor: usuario.id.valor },
             nomeCompleto: dados.nomeCompleto,
             email: dados.email,
-            permissao: dados.permissao
+            permissao: dados.permissao,
+            deletadoEm: null,
+            emailVerificadoEm: null,
+            administradorSistema: false
         })
         expect(JSON.stringify({ ...usuario })).not.toContain(hash)
         expect(JSON.stringify(usuario.semSenha())).not.toContain(hash)

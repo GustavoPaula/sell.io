@@ -8,11 +8,11 @@ describe('AutenticacaoUsuarioCasoDeUso', () => {
     const hash = `$2b$12$${'a'.repeat(21)}.${'a'.repeat(30)}.`
     const dados = { email: 'maria@example.com', senha: 'senha123' }
     const usuario = Usuario.criar({
-        nomeCompleto: 'Maria Silva', email: dados.email, senha: hash, permissao: 'MEMBRO'
+        nomeCompleto: 'Maria Silva', email: dados.email, senha: hash, permissao: 'MEMBRO', emailVerificadoEm: new Date('2026-01-01')
     })
 
     function preparar() {
-        const repo = { buscarPorEmail: vi.fn().mockResolvedValue(usuario), buscarPorId: vi.fn(), salvar: vi.fn(), alterarProps: vi.fn() }
+        const repo = { buscarPorEmail: vi.fn().mockResolvedValue(usuario), buscarPorId: vi.fn(), salvar: vi.fn(), criarToken: vi.fn(), confirmarToken: vi.fn(), desativarUsuario: vi.fn(), alterarProps: vi.fn() }
         const crypto = { comparar: vi.fn().mockResolvedValue(true), criptografar: vi.fn() }
         return { repo, crypto, caso: new AutenticacaoUsuarioCasoDeUso(repo, crypto) }
     }
@@ -51,6 +51,23 @@ describe('AutenticacaoUsuarioCasoDeUso', () => {
         crypto.comparar.mockResolvedValue(false)
         await expect(caso.executar(dados)).rejects.toMatchObject({ codigo: Erros.CREDENCIAIS_INVALIDAS })
         expect(crypto.comparar).toHaveBeenCalledWith(dados.senha, hash)
+    })
+
+    test('Deve rejeitar senha incorreta mesmo quando o e-mail não estiver verificado', async () => {
+        const { repo, crypto, caso } = preparar()
+        repo.buscarPorEmail.mockResolvedValue(usuario.clone({ emailVerificadoEm: null }))
+        crypto.comparar.mockResolvedValue(false)
+        await expect(caso.executar(dados)).rejects.toMatchObject({ codigo: Erros.CREDENCIAIS_INVALIDAS })
+        expect(crypto.comparar).toHaveBeenCalledWith(dados.senha, hash)
+    })
+
+    test('Deve comparar a senha antes de retornar usuário com e-mail não verificado', async () => {
+        const { repo, crypto, caso } = preparar()
+        repo.buscarPorEmail.mockResolvedValue(usuario.clone({ emailVerificadoEm: null }))
+        const resultado = await caso.executar(dados)
+        expect(crypto.comparar).toHaveBeenCalledWith(dados.senha, hash)
+        expect(resultado.emailVerificadoEm).toBeNull()
+        expect(resultado.senha).toBeUndefined()
     })
 
     test('Deve propagar falhas do provedor de comparação', async () => {

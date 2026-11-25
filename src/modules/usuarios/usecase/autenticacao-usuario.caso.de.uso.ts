@@ -10,7 +10,10 @@ export type DadosEntrada = {
     senha: string
 }
 
-export default class AutenticacaoUsuarioCasoDeUso implements CasoDeUso<DadosEntrada, Usuario> {
+export default class AutenticacaoUsuarioCasoDeUso implements CasoDeUso<
+    DadosEntrada,
+    Usuario
+> {
     constructor(
         private readonly repo: UsuarioRepositorio,
         private readonly crypto: CryptoRepositorio
@@ -18,11 +21,14 @@ export default class AutenticacaoUsuarioCasoDeUso implements CasoDeUso<DadosEntr
 
     async executar(dados: DadosEntrada): Promise<Usuario> {
         const usuario = await this.repo.buscarPorEmail(dados.email)
-        if (!usuario?.senha) {
+        if (!usuario?.senha || usuario.deletadoEm !== null) {
             return ErroValidacao.lancar(Erros.CREDENCIAIS_INVALIDAS)
         }
 
-        const senhaCorreta = await this.crypto.comparar(dados.senha, usuario.senha)
+        const senhaCorreta = await this.crypto.comparar(
+            dados.senha,
+            usuario.senha
+        )
         if (!senhaCorreta) {
             return ErroValidacao.lancar(Erros.CREDENCIAIS_INVALIDAS)
         }
